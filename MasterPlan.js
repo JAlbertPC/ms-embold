@@ -13,14 +13,8 @@ async function cargarMasterPlan(masterPlanId) {
                     const loteActual = this.obtenerLote(loteUUID);
                     if (loteActual) {
                         (lote).style.fill = this.obtenerEstadoLote(loteActual);
-                        if (this.authService.havePermission('Masterplan', 'Ver todo')) {
-                            if (loteActual.idRel_tipo_estatus != 3 && loteActual.idRel_tipo_estatus != 4) {
-                                this.funcionalidadLote(lote, loteUUID, loteActual);
-                            }
-                        } else {
-                            if (loteActual.idRel_tipo_estatus != 3 && loteActual.idRel_tipo_estatus != 4 && loteActual.idRel_tipo_estatus != 5) {
-                                this.funcionalidadLote(lote, loteUUID, loteActual);
-                            }
+                        if (loteActual.idRel_tipo_estatus != 3 && loteActual.idRel_tipo_estatus != 4 && loteActual.idRel_tipo_estatus != 5) {
+                            this.funcionalidadLote(lote, loteUUID, loteActual);
                         }
                         lote.addEventListener('mousedown', function (event) {
                             this.mousePosition.positionX = (event).screenX;
