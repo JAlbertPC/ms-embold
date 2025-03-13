@@ -205,193 +205,7 @@ export class MapaPage implements OnInit {
     this.generalServices.get(`masterplanlote/lotes/${masterPlanId}`).subscribe((response) => {
       if (response) {
         this.listaLotes = response;
-        if (this.contenedorSVG) {
-          this.generalServices.get(`masterplans/obtenersvg/${masterPlanId}`).subscribe((response) => {
-            const masterPlanJSON: any = response;
-            if (masterPlanJSON['svgString']) {
-              const masterPlan = masterPlanJSON['svgString'];
-              const domParser = new DOMParser();
-              const svgElement = domParser.parseFromString(
-                masterPlan,
-                'image/svg+xml'
-              ).documentElement;
-              const lotes = svgElement.querySelectorAll('[lote-uuid]');
-              if (lotes) {
-                lotes.forEach((lote) => {
-                  const loteUUID = lote.attributes.getNamedItem('lote-uuid')!.value;
-                  const loteActual = this.obtenerLote(loteUUID);
-
-                  if (loteActual) {
-                    (lote as HTMLElement).style.fill = this.obtenerEstadoLote(loteActual);
-                    lote.addEventListener('mousedown', (event) => {
-                      this.mousePosition.positionX = (event as MouseEvent).screenX;
-                      this.mousePosition.positionY = (event as MouseEvent).screenY;
-                    });
-                    if (this.authService.havePermission('Masterplan', 'Ver todo')) {
-                      if (loteActual.idRel_tipo_estatus != 3 && loteActual.idRel_tipo_estatus != 4) {
-                        lote.addEventListener('mouseover', (event) => {
-                          const loteEnontrado = this.obtenerLote(loteUUID);
-
-                          if ((loteEnontrado.idRel_tipo_estatus != 5 && loteEnontrado.idRel_tipo_estatus != 4) || this.authService.havePermission('Masterplan', 'Ver todo')) {
-                            const lote = event.target as HTMLElement;
-                            lote.style.cursor = "pointer";
-                            lote.style.fill = "rgba(255, 255, 255, 0.5)";
-                          }
-                        });
-
-                        lote.addEventListener('mouseout', (event) => {
-                          const loteElement = event.target as HTMLElement;
-                          loteElement.style.fill = this.obtenerEstadoLote(loteActual);
-                        });
-
-
-                        lote.addEventListener('click', async (event) => {
-                          if (
-                            this.mousePosition.positionX === (event as MouseEvent).screenX &&
-                            this.mousePosition.positionY === (event as MouseEvent).screenY
-                          ) {
-                            this.obtenerEscalaYCoordenadas();
-                            const lote = this.obtenerLote(loteUUID);
-                            if (lote) {
-                              if (lote.estatus_lote == 1 || this.authService.havePermission('Masterplan', 'Ver todo')) {
-                                if (lote.idRel_tipo_estatus != 5 && lote.idRel_tipo_estatus != 4 || this.authService.havePermission('Masterplan', 'Ver todo')) {
-                                  console.log("Mapa page", this.dentroModal);
-
-                                  const modal = await this.modalCtrl.create({
-                                    component: ModalVisualizarComponent,
-                                    cssClass: 'modal-visualizar',
-                                    componentProps: {
-                                      data: { ...{ 'id_proyecto': this.proyectoId }, ...lote },
-                                      dentroModal: this.dentroModal,
-                                      interesadoDentroModal: this.data
-                                    },
-                                    backdropDismiss: false,
-                                  });
-                                  modal.present();
-                                  modal.onDidDismiss().then((data: any) => {
-                                    if (data.role === "seleccionado") {
-                                      this.modalCtrl.dismiss(data.data, 'seleccionado');
-                                    } else {
-                                      this.obtenerListaLotes(this.masterPlanId);
-                                    }
-                                  })
-                                }
-                              } else {
-                                this.alertCtrl.create({
-                                  message: "En este momento, el lote solicitado no está disponible para su venta.",
-                                  buttons: ['Cerrar'],
-                                }).then((response: any) => response.present())
-                              }
-                            }
-                          }
-                        });
-                      }
-                    } else {
-                      if (loteActual.idRel_tipo_estatus != 3 && loteActual.idRel_tipo_estatus != 4 && loteActual.idRel_tipo_estatus != 5) {
-                        lote.addEventListener('mouseover', (event) => {
-                          const loteEnontrado = this.obtenerLote(loteUUID);
-
-                          if ((loteEnontrado.idRel_tipo_estatus != 5 && loteEnontrado.idRel_tipo_estatus != 4) || this.authService.havePermission('Masterplan', 'Ver todo')) {
-                            const lote = event.target as HTMLElement;
-                            lote.style.cursor = "pointer";
-                            lote.style.fill = "rgba(255, 255, 255, 0.5)";
-                          }
-                        });
-
-                        lote.addEventListener('mouseout', (event) => {
-                          const loteElement = event.target as HTMLElement;
-                          loteElement.style.fill = this.obtenerEstadoLote(loteActual);
-                        });
-
-
-                        lote.addEventListener('click', async (event) => {
-                          if (
-                            this.mousePosition.positionX === (event as MouseEvent).screenX &&
-                            this.mousePosition.positionY === (event as MouseEvent).screenY
-                          ) {
-                            this.obtenerEscalaYCoordenadas();
-                            const lote = this.obtenerLote(loteUUID);
-                            if (lote) {
-                              if (lote.estatus_lote == 1 || this.authService.havePermission('Masterplan', 'Ver todo')) {
-                                if (lote.idRel_tipo_estatus != 5 && lote.idRel_tipo_estatus != 4 || this.authService.havePermission('Masterplan', 'Ver todo')) {
-                                  console.log("Mapa page", this.dentroModal);
-
-                                  const modal = await this.modalCtrl.create({
-                                    component: ModalVisualizarComponent,
-                                    cssClass: 'modal-visualizar',
-                                    componentProps: {
-                                      data: { ...{ 'id_proyecto': this.proyectoId }, ...lote },
-                                      dentroModal: this.dentroModal,
-                                      interesadoDentroModal: this.data
-                                    },
-                                    backdropDismiss: false,
-                                  });
-                                  modal.present();
-                                  modal.onDidDismiss().then((data: any) => {
-                                    if (data.role === "seleccionado") {
-                                      this.modalCtrl.dismiss(data.data, 'seleccionado');
-                                    } else {
-                                      this.obtenerListaLotes(this.masterPlanId);
-                                    }
-                                  })
-                                }
-                              } else {
-                                this.alertCtrl.create({
-                                  message: "En este momento, el lote solicitado no está disponible para su venta.",
-                                  buttons: ['Cerrar'],
-                                }).then((response: any) => response.present())
-                              }
-                            }
-                          }
-                        });
-                      }
-                    }
-                  } else {
-                    (lote as HTMLElement).style.fill = "rgb(227, 227, 227)"
-                  }
-                });
-              }
-
-              this.contenedorSVG.nativeElement.replaceChildren();
-              this.contenedorSVG.nativeElement.appendChild(svgElement);
-
-              const panZoomConfiguracion = {
-                canvas: true,
-                noBind: false,
-                maxScale: 5,
-                minScale: 0.5,
-                handleStartEvent: (event: any) => { },
-                cursor: 'grab',
-                startScale: this.panzoomEscalaCoordenadas.escala,
-                startX: this.panzoomEscalaCoordenadas.coordenadas.x,
-                startY: this.panzoomEscalaCoordenadas.coordenadas.y,
-              }
-
-              this.panzoomControl = PanZoom(
-                this.contenedorSVG.nativeElement.firstElementChild as SVGElement, panZoomConfiguracion);
-
-              this.contenedorSVG.nativeElement.addEventListener(
-                'pointermove',
-                this.panzoomControl.handleMove
-              );
-              this.contenedorSVG.nativeElement.addEventListener(
-                'pointerup', (event: any) => {
-                  this.panzoomControl.handleUp
-                  event.target.style.cursor = "grab";
-                });
-              this.contenedorSVG.nativeElement.firstElementChild!.addEventListener(
-                'pointerdown', (event: any) => {
-                  this.panzoomControl.handleDown(event);
-                  event.target.style.cursor = "grabbing";
-                }
-              );
-              this.contenedorSVG.nativeElement.addEventListener(
-                'wheel',
-                this.panzoomControl.zoomWithWheel
-              );
-            }
-          });
-        }
+        this.cargarMasterPlan(masterPlanId);
       }
     });
   }
@@ -410,6 +224,8 @@ export class MapaPage implements OnInit {
   }
 
   cargarMasterPlan(masterPlanId: string) {
+    /* const contenedorSVG = document.getElementById('contenedor-svg'); */
+
     if (this.contenedorSVG) {
       this.generalServices.get(`masterplans/obtenersvg/${masterPlanId}`).subscribe((response) => {
         const masterPlanJSON: any = response;
@@ -434,121 +250,11 @@ export class MapaPage implements OnInit {
                 });
                 if (this.authService.havePermission('Masterplan', 'Ver todo')) {
                   if (loteActual.idRel_tipo_estatus != 3 && loteActual.idRel_tipo_estatus != 4) {
-                    lote.addEventListener('mouseover', (event) => {
-                      const loteEnontrado = this.obtenerLote(loteUUID);
-
-                      if ((loteEnontrado.idRel_tipo_estatus != 5 && loteEnontrado.idRel_tipo_estatus != 4) || this.authService.havePermission('Masterplan', 'Ver todo')) {
-                        const lote = event.target as HTMLElement;
-                        lote.style.cursor = "pointer";
-                        lote.style.fill = "rgba(255, 255, 255, 0.5)";
-                      }
-                    });
-
-                    lote.addEventListener('mouseout', (event) => {
-                      const loteElement = event.target as HTMLElement;
-                      loteElement.style.fill = this.obtenerEstadoLote(loteActual);
-                    });
-
-
-                    lote.addEventListener('click', async (event) => {
-                      if (
-                        this.mousePosition.positionX === (event as MouseEvent).screenX &&
-                        this.mousePosition.positionY === (event as MouseEvent).screenY
-                      ) {
-                        this.obtenerEscalaYCoordenadas();
-                        const lote = this.obtenerLote(loteUUID);
-                        if (lote) {
-                          if (lote.estatus_lote == 1 || this.authService.havePermission('Masterplan', 'Ver todo')) {
-                            if (lote.idRel_tipo_estatus != 5 && lote.idRel_tipo_estatus != 4 || this.authService.havePermission('Masterplan', 'Ver todo')) {
-                              console.log("Mapa page", this.dentroModal);
-
-                              const modal = await this.modalCtrl.create({
-                                component: ModalVisualizarComponent,
-                                cssClass: 'modal-visualizar',
-                                componentProps: {
-                                  data: { ...{ 'id_proyecto': this.proyectoId }, ...lote },
-                                  dentroModal: this.dentroModal,
-                                  interesadoDentroModal: this.data
-                                },
-                                backdropDismiss: false,
-                              });
-                              modal.present();
-                              modal.onDidDismiss().then((data: any) => {
-                                if (data.role === "seleccionado") {
-                                  this.modalCtrl.dismiss(data.data, 'seleccionado');
-                                } else {
-                                  this.obtenerListaLotes(this.masterPlanId);
-                                }
-                              })
-                            }
-                          } else {
-                            this.alertCtrl.create({
-                              message: "En este momento, el lote solicitado no está disponible para su venta.",
-                              buttons: ['Cerrar'],
-                            }).then((response: any) => response.present())
-                          }
-                        }
-                      }
-                    });
+                    this.funcionalidadLote(lote, loteUUID, loteActual);
                   }
                 } else {
                   if (loteActual.idRel_tipo_estatus != 3 && loteActual.idRel_tipo_estatus != 4 && loteActual.idRel_tipo_estatus != 5) {
-                    lote.addEventListener('mouseover', (event) => {
-                      const loteEnontrado = this.obtenerLote(loteUUID);
-
-                      if ((loteEnontrado.idRel_tipo_estatus != 5 && loteEnontrado.idRel_tipo_estatus != 4) || this.authService.havePermission('Masterplan', 'Ver todo')) {
-                        const lote = event.target as HTMLElement;
-                        lote.style.cursor = "pointer";
-                        lote.style.fill = "rgba(255, 255, 255, 0.5)";
-                      }
-                    });
-
-                    lote.addEventListener('mouseout', (event) => {
-                      const loteElement = event.target as HTMLElement;
-                      loteElement.style.fill = this.obtenerEstadoLote(loteActual);
-                    });
-
-
-                    lote.addEventListener('click', async (event) => {
-                      if (
-                        this.mousePosition.positionX === (event as MouseEvent).screenX &&
-                        this.mousePosition.positionY === (event as MouseEvent).screenY
-                      ) {
-                        this.obtenerEscalaYCoordenadas();
-                        const lote = this.obtenerLote(loteUUID);
-                        if (lote) {
-                          if (lote.estatus_lote == 1 || this.authService.havePermission('Masterplan', 'Ver todo')) {
-                            if (lote.idRel_tipo_estatus != 5 && lote.idRel_tipo_estatus != 4 || this.authService.havePermission('Masterplan', 'Ver todo')) {
-                              console.log("Mapa page", this.dentroModal);
-
-                              const modal = await this.modalCtrl.create({
-                                component: ModalVisualizarComponent,
-                                cssClass: 'modal-visualizar',
-                                componentProps: {
-                                  data: { ...{ 'id_proyecto': this.proyectoId }, ...lote },
-                                  dentroModal: this.dentroModal,
-                                  interesadoDentroModal: this.data
-                                },
-                                backdropDismiss: false,
-                              });
-                              modal.present();
-                              modal.onDidDismiss().then((data: any) => {
-                                if (data.role === "seleccionado") {
-                                  this.modalCtrl.dismiss(data.data, 'seleccionado');
-                                } else {
-                                  this.obtenerListaLotes(this.masterPlanId);
-                                }
-                              })
-                            }
-                          } else {
-                            this.alertCtrl.create({
-                              message: "En este momento, el lote solicitado no está disponible para su venta.",
-                              buttons: ['Cerrar'],
-                            }).then((response: any) => response.present())
-                          }
-                        }
-                      }
-                    });
+                    this.funcionalidadLote(lote, loteUUID, loteActual);
                   }
                 }
               } else {
@@ -599,6 +305,33 @@ export class MapaPage implements OnInit {
     }
   }
 
+  funcionalidadLote(lote: Element, loteUUID: string, loteActual: any) {
+    lote.addEventListener('mouseover', (event) => {
+      const loteEnontrado = this.obtenerLote(loteUUID);
+
+      if ((loteEnontrado.idRel_tipo_estatus != 5 && loteEnontrado.idRel_tipo_estatus != 4) || this.authService.havePermission('Masterplan', 'Ver todo')) {
+        const lote = event.target as HTMLElement;
+        lote.style.cursor = "pointer";
+        lote.style.fill = "rgba(255, 255, 255, 0.5)";
+      }
+    });
+
+    lote.addEventListener('mouseout', (event) => {
+      const loteElement = event.target as HTMLElement;
+      loteElement.style.fill = this.obtenerEstadoLote(loteActual);
+    });
+
+
+    lote.addEventListener('click', (event) => {
+      if (
+        this.mousePosition.positionX === (event as MouseEvent).screenX &&
+        this.mousePosition.positionY === (event as MouseEvent).screenY
+      ) {
+        this.mostrarModalVisualizar(loteUUID);
+      }
+    });
+  }
+
   zoomIn() {
     this.panzoomControl.zoomIn();
   }
@@ -620,6 +353,41 @@ export class MapaPage implements OnInit {
     this.panzoomEscalaCoordenadas.coordenadas = this.panzoomControl.getPan();
   }
 
+  async mostrarModalVisualizar(loteUUID: string) {
+    this.obtenerEscalaYCoordenadas();
+    const lote = this.obtenerLote(loteUUID);
+    if (lote) {
+      if (lote.estatus_lote == 1 || this.authService.havePermission('Masterplan', 'Ver todo')) {
+        if (lote.idRel_tipo_estatus != 5 && lote.idRel_tipo_estatus != 4 || this.authService.havePermission('Masterplan', 'Ver todo')) {
+          console.log("Mapa page", this.dentroModal);
+
+          const modal = await this.modalCtrl.create({
+            component: ModalVisualizarComponent,
+            cssClass: 'modal-visualizar',
+            componentProps: {
+              data: { ...{ 'id_proyecto': this.proyectoId }, ...lote },
+              dentroModal: this.dentroModal,
+              interesadoDentroModal: this.data
+            },
+            backdropDismiss: false,
+          });
+          modal.present();
+          modal.onDidDismiss().then((data: any) => {
+            if (data.role === "seleccionado") {
+              this.modalCtrl.dismiss(data.data, 'seleccionado');
+            } else {
+              this.obtenerListaLotes(this.masterPlanId);
+            }
+          })
+        }
+      } else {
+        this.alertCtrl.create({
+          message: "En este momento, el lote solicitado no está disponible para su venta.",
+          buttons: ['Cerrar'],
+        }).then((response: any) => response.present())
+      }
+    }
+  }
 
   obtenerLote(lote_uuid: string) {
     const loteIndex = this.listaLotes.data.findIndex((lote: any) => lote.uuid_lote == lote_uuid);
